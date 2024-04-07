@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  firstName     String    @default("")
+  lastName      String    @default("")
+  username      String     @unique
+  email         String     @unique
+  password      String
+  emailVerified DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  profile       Profile?
+  astrals       Astral[]
+  rtAstrals     RtAstral[]
+  followers     Follow[]   @relation("UserFollowers")
+  following     Follow[]   @relation("UserFollowing")
+  likes         Like[]
+  Dislike       Dislike[]
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  bio       String?
+  location  String?
+  website   String?
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Astral {
+  id        String     @id @default(cuid())
+  title     String
+  text      String
+  image     String?
+  author    User       @relation(fields: [authorId], references: [id])
+  authorId  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  likes     Like[]
+  dislikes  Dislike[]
+  rtAstrals RtAstral[]
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  astral    Astral   @relation(fields: [astralId], references: [id])
+  astralId  String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([astralId, userId])
+}
+
+model Dislike {
+  id        String   @id @default(cuid())
+  astral    Astral   @relation(fields: [astralId], references: [id])
+  astralId  String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([astralId, userId])
+}
+
+model RtAstral {
+  id        String   @id @default(cuid())
+  astral    Astral   @relation(fields: [astralId], references: [id])
+  astralId  String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([astralId, userId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  follower    User     @relation("UserFollowers", fields: [followerId], references: [id])
+  followerId  String
+  following   User     @relation("UserFollowing", fields: [followingId], references: [id])
+  followingId String
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, token])
+}
